@@ -1,0 +1,80 @@
+table, tr, td {
+    border: 1px solid black;
+}
+tr {
+    height: 40px;
+}
+td {
+    width: 40px;
+}
+.blue {
+    background-color: blue;
+}
+.red {
+    background-color: red;
+}
+.green {
+    background-color: green;
+}
+.yellow {
+    background-color: yellow;
+}
+.cyan {
+    background-color: cyan;
+}
+.magenta {
+    background-color: magenta;
+}
+.orange {
+    background-color: orange;
+}
+.controls {
+    margin-top: -840px;
+    margin-left: 500px;
+}
+
+.button:hover {
+    background: #00c3ff;
+}
+
+.tetris-piece {
+    display: grid;
+    gap: 2px;
+    padding: 5px;
+    border-radius: 8px;
+}
+
+.block {
+    width: 35px;
+    height: 35px;
+    border-radius: 5px;
+    position: relative;
+    border: 2px solid;
+    box-shadow: 
+        inset 0 0 8px rgba(255, 255, 255, 0.3),
+        4px 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+.block::before {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    right: 3px;
+    bottom: 3px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0));
+    border-radius: 3px;
+}
+
+.block:hover {
+    filter: brightness(1.2);
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.6);
+}
+
+.piece-i .block { background: linear-gradient(to bottom, #00eaff, #00a8a8); border-color: #007a7a; }
+.piece-o .block { background: linear-gradient(to bottom, #f7d700, #f39c12); border-color: #d48b00; }
+.piece-t .block { background: linear-gradient(to bottom, #b084f5, #8e44ad); border-color: #6a2c91; }
+.piece-s .block { background: linear-gradient(to bottom, #5eff5e, #27ae60); border-color: #1d8042; }
+.piece-z .block { background: linear-gradient(to bottom, #ff5c5c, #c0392b); border-color: #992d22; }
+.piece-j .block { background: linear-gradient(to bottom, #5da9ff, #2980b9); border-color: #1c5d8b; }
+.piece-l .block { background: linear-gradient(to bottom, #ff9834, #d35400); border-color: #a43d00; }

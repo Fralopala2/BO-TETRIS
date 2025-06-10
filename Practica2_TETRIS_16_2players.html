@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tetris 2 Jugadores</title>
+    <style>
+        body {
+            background: 
+            url('./fondo/fondo.jpg') center/cover no-repeat fixed,
+                linear-gradient(to bottom, #1a1a1a, #000000);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #121212;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            perspective: 1000px;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: -1;
+        }
+
+        .arcade-cabinet {
+            position: relative;
+            width: 1200px;
+            height: 950px; /* Aumentado de 900px a 950px */
+            background: linear-gradient(45deg, #1a0933, #2d0b5a);
+            border: 3px solid #6a0dad;
+            box-shadow:
+                0 0 50px rgba(106, 13, 173, 0.7),
+                inset 0 0 30px rgba(98, 0, 255, 0.4);
+            padding: 20px;
+        }
+
+        .arcade-cabinet::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 20px 20px 0 0;
+            pointer-events: none;
+            box-shadow: 
+                inset 0 0 30px rgba(138, 43, 226, 0.3),
+                inset 0 0 60px rgba(75, 0, 130, 0.2);
+        }
+
+        .marquee {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 500px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(to right, #4b00ff, #8a2be2);
+            border-color: #4b0082;
+            box-shadow:
+                0 0 25px rgba(75, 0, 255, 0.7),
+                inset 0 0 15px rgba(147, 112, 219, 0.5);
+            overflow: hidden;
+        }
+
+        .marquee h1 {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #fff;
+            text-shadow:
+                0 0 10px rgba(255, 255, 255, 0.7),
+                0 0 20px rgba(255, 255, 255, 0.5),
+                0 0 30px rgba(255, 255, 255, 0.3),
+                3px 3px 0 #000;
+            letter-spacing: 2px;
+            margin: 0;
+            animation: glowText 2s infinite alternate;
+        }
+
+        @keyframes glowText {
+            from { text-shadow: 0 0 10px rgba(255, 255, 255, 0.7), 0 0 20px rgba(255, 255, 255, 0.5), 3px 3px 0 #000; }
+            to { text-shadow: 0 0 15px rgba(255, 255, 255, 0.9), 0 0 30px rgba(255, 255, 255, 0.7), 3px 3px 0 #000; }
+        }
+
+        .screen-area {
+            position: relative;
+            width: 90%;
+            height: 650px; /* Aumentado de 600px a 650px */
+            margin: 70px auto 0;
+            background-color: #000;
+            border-radius: 20px;
+            border-color: #483d8b;
+            box-shadow:
+                inset 0 0 40px rgba(70, 0, 110, 0.7),
+                0 0 30px rgba(138, 43, 226, 0.6);
+            overflow: hidden;
+            border: 15px solid #111;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .screen-reflection {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg,
+                rgba(255, 255, 255, 0.1) 0%,
+                rgba(255, 255, 255, 0) 40%);
+            pointer-events: none;
+        }
+
+        .controls-panel {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background: linear-gradient(to bottom, #444, #222);
+            border-top: 5px solid #111;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 10px 0;
+        }
+
+        .joystick {
+            width: 50px;
+            height: 50px;
+            background: #000;
+            border-radius: 50%;
+            position: relative;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
+        }
+
+        .joystick::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 25px;
+            height: 25px;
+            background: linear-gradient(to bottom, #9370db, #8a2be2);
+            box-shadow: 0 0 15px rgba(147, 112, 219, 0.8);
+            border-radius: 50%;
+            border: 3px solid #000;
+        }
+
+        .button {
+            width: 35px;
+            height: 35px;
+            background: linear-gradient(to bottom, #9370db, #8a2be2);
+            box-shadow: 0 0 15px rgba(147, 112, 219, 0.8);
+            border-radius: 50%;
+            border: 3px solid #000;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
+        }
+
+        .game-container {
+            display: flex;
+            justify-content: space-between;
+            width: 95%; /* Aumentado de 100% a 95% para margen interno */
+            gap: 20px; 
+            padding: 0 10px; /* Reducido padding lateral */
+            height: 100%; /* Ocupa toda la altura disponible */
+        }
+
+        .player-container {
+            display: flex;
+            flex: 1; 
+            min-width: 0;
+            gap: 15px;
+        }
+
+        .game-board {
+            flex: 1;
+            min-width: 250px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100%; /* Ocupa toda la altura */
+        }
+
+        table {
+            border-collapse: collapse;
+            background-color: rgba(0, 0, 0, 0.3);
+            border: 3px solid #34495e;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            height: 550px; /* Aumentado de 500px a 550px */
+            table-layout: fixed;
+        }
+
+        tr {
+            height: 25px;
+        }
+
+        td {
+            width: 25px;
+            border: 1px solid #34495e;
+            box-sizing: border-box;
+        }
+
+        .left-panel, .right-panel {
+            width: 170px; /* Reducido de 180px a 170px */
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px; /* Reducido el gap */
+            justify-content: space-between; /* Distribuye el espacio */
+            height: 100%; /* Ocupa toda la altura */
+        }
+
+        .block {
+            width: 20px;
+            height: 20px;
+            border-radius: 5px;
+            position: relative;
+            border: 2px solid;
+            box-shadow:
+                inset 0 0 8px rgba(255, 255, 255, 0.3),
+                4px 4px 8px rgba(0, 0, 0, 0.5);
+        }
+
+        .block::before {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            right: 3px;
+            bottom: 3px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0));
+            border-radius: 3px;
+        }
+
+        /* Estilos para cada tipo de pieza */
+        .pieza-i { background: linear-gradient(to bottom, #00eaff, #00a8a8); border-color: #007a7a; }
+        .pieza-o { background: linear-gradient(to bottom, #f7d700, #f39c12); border-color: #d48b00; }
+        .pieza-t { background: linear-gradient(to bottom, #b084f5, #8e44ad); border-color: #6a2c91; }
+        .pieza-s { background: linear-gradient(to bottom, #5eff5e, #27ae60); border-color: #1d8042; }
+        .pieza-z { background: linear-gradient(to bottom, #ff5c5c, #c0392b); border-color: #992d22; }
+        .pieza-j { background: linear-gradient(to bottom, #5da9ff, #2980b9); border-color: #1c5d8b; }
+        .pieza-l { background: linear-gradient(to bottom, #ff9834, #d35400); border-color: #a43d00; }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 180px;
+            margin-top: 5px;
+        }
+
+        .control-button {
+            padding: 8px 15px;
+            background: linear-gradient(to bottom, #3498db, #2980b9);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            width: 100%;
+            font-size: 0.8em;
+        }
+
+        .control-button:hover {
+            background: linear-gradient(to bottom, #00c3ff, #2980b9);
+            transform: scale(1.05);
+        }
+
+        .tetris-preview {
+            margin-top: 15px;
+        }
+
+        .pieza-sample {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pieza-block {
+            width: 15px;
+            height: 15px;
+            border-radius: 3px;
+            position: relative;
+            border: 1px solid;
+            box-shadow: inset 0 0 4px rgba(255, 255, 255, 0.3);
+        }
+
+        .next-piece-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 180px;
+            margin: 15px 0 0;
+            margin-top: 10px;
+        }
+
+        .next-piece-preview {
+            width: 120px;
+            height: 120px;
+            background-color: rgba(0, 0, 0, 0.2);
+            border: 2px solid #34495e;
+            border-radius: 5px;
+            position: relative;
+        }
+
+        .next-piece-preview .block {
+            width: 20px;
+            height: 20px;
+            border-radius: 5px;
+            border: 2px solid;
+            box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.3);
+            position: absolute;
+        }
+
+        .stats-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .marcador {
+            background: linear-gradient(135deg, rgba(75, 0, 130, 0.3), rgba(0, 0, 0, 0.5));
+            padding: 8px;
+            border-radius: 8px;
+            width: 160px;
+            height: 50px; /* Reducida la altura */
+            color: #fff;
+            font-size: 0.9em;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #6a0dad;
+            box-shadow: 0 0 15px rgba(106, 13, 173, 0.5), inset 0 0 10px rgba(255, 255, 255, 0.2);
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.7);
+        }
+        
+        .coin-slot {
+            position: absolute;
+            right: 130px;
+            top: 30px;
+            width: 50px;
+            height: 12px;
+            background: linear-gradient(to bottom, #333, #222);
+            border-radius: 6px;
+            border: 2px solid #555;
+            box-shadow: 
+                inset 0 2px 3px rgba(255,255,255,0.1),
+                inset 0 -2px 3px rgba(0,0,0,0.4),
+                0 2px 5px rgba(0,0,0,0.5);
+            transform: perspective(200px) rotateX(20deg);
+            z-index: 10;
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        /* Efecto 3D interior */
+        .coin-slot::before {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            right: 2px;
+            bottom: 2px;
+            background: linear-gradient(to bottom, #444, #333);
+            border-radius: 4px;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
+        }
+
+        /* Texto "INSERT COIN" - estilo 3D */
+        .coin-text {
+            position: absolute;
+            right: 85px;
+            top: 50px;
+            color: #ffcc00;
+            font-size: 0.9em;
+            font-family: 'Arial Black', sans-serif;
+            text-shadow: 
+                0 0 5px rgba(255, 204, 0, 0.9),
+                0 0 10px rgba(255, 204, 0, 0.6),
+                1px 1px 2px #000,
+                -1px -1px 2px #000;
+            white-space: nowrap;
+            letter-spacing: 1.5px;
+            font-weight: bold;
+            z-index: 20;
+            background: linear-gradient(to bottom, #3a3a3a, #2a2a2a);
+            padding: 3px 10px;
+            border-radius: 4px;
+            border: 1px solid #555;
+            box-shadow: 
+                0 2px 5px rgba(0,0,0,0.5),
+                inset 0 1px 2px rgba(255,255,255,0.1);
+            transform: perspective(200px) rotateX(15deg);
+        }
+
+        /* Efecto hover para ambos elementos */
+        .coin-slot:hover, .coin-text:hover {
+            filter: brightness(1.2);
+        }
+
+        /* Animacion de moneda */
+        .coin {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: radial-gradient(circle at 30% 30%, #ffd700, #daa520);
+            border-radius: 50%;
+            box-shadow: 
+                0 0 5px rgba(255,215,0,0.8),
+                inset -2px -2px 4px rgba(0,0,0,0.4);
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 15;
+            display: none;
+        }
+
+        .coin-slot.active::before {
+            animation: slotGlow 0.5s ease-out;
+        }
+
+        @keyframes slotGlow {
+            0% { box-shadow: inset 0 0 8px rgba(255,255,255,0.2); }
+            50% { box-shadow: inset 0 0 15px rgba(255,215,0,0.8); }
+            100% { box-shadow: inset 0 0 8px rgba(255,255,255,0.2); }
+        }
+
+        @keyframes coinDrop {
+            0% { top: -20px; opacity: 1; }
+            80% { opacity: 1; }
+            100% { top: 40px; opacity: 0; }
+        }
+
+        /* Efecto de credito añadido */
+        .credit-added {
+            position: absolute;
+            right: 60px;
+            top: 15px;
+            color: #0f0;
+            font-family: 'Arial Black', sans-serif;
+            font-size: 1.8em;
+            text-shadow: 0 0 10px #0f0;
+            opacity: 0;
+            transform: translateY(40px);
+            z-index: 10;
+        }
+
+        .credit-added.show {
+            animation: creditShow 1.5s ease-out;
+        }
+
+        @keyframes creditShow {
+            0% { opacity: 0; transform: translateY(20px); }
+            20% { opacity: 1; transform: translateY(0); }
+            80% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-40px); }
+        }
+
+        /* Estilo para el left-panel (Jugador 1) */
+        .player-container:nth-child(1) .left-panel {
+            order: -1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-left: 10px;
+            margin-right: 10px;
+        }
+
+        /* Estilo para el right-panel (Jugador 2) */
+        .player-container:nth-child(2) .right-panel {
+            order: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-left: 10px;
+            margin-right: 10px;
+        }
+
+        /* Ajusta el next-piece-container para que se quede dentro de los paneles */
+        .next-piece-container {
+            align-self: center;
+        }
+
+        .particle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: particleBurst 0.6s ease-out forwards;
+        }
+
+        @keyframes particleBurst {
+            0% {
+                opacity: 1;
+                transform: scale(1) translate(0, 0);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0.5) translate(var(--x), var(--y));
+            }
+        }
+
+        h1, h2, h4 {
+            text-shadow: 
+                0 0 10px #4b00ff, 
+                0 0 20px #8a2be2,
+                0 0 30px #9400d3;
+        }
+
+        h3, h4 {
+            font-family: 'Arial', sans-serif;
+            color: aliceblue;
+            font-size: 1em;
+            margin: 5px 0;
+        }
+
+        p {
+            margin: 5px 0;
+        }
+
+        /* Estilos para el sistema de niveles */
+        .level-display {
+            background: linear-gradient(135deg, rgba(75, 0, 130, 0.3), rgba(0, 0, 0, 0.5));
+            padding: 8px;
+            border-radius: 8px;
+            width: 160px;
+            height: 80px; /* Mas alto para incluir la barra de progreso */
+            color: #fff;
+            font-size: 0.9em;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #6a0dad;
+            box-shadow: 0 0 15px rgba(106, 13, 173, 0.5), inset 0 0 10px rgba(255, 255, 255, 0.2);
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.7);
+        }
+        .level-up {
+            animation: levelUpFlash 1s ease-out;
+        }
+
+        @keyframes levelUpFlash {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.5) saturate(2); }
+        }
+
+        /* Estilos para el sistema de combos */
+        .combo-display {
+            background: linear-gradient(135deg, rgba(255, 0, 0, 0.3), rgba(0, 0, 0, 0.5));
+            padding: 8px;
+            border-radius: 8px;
+            width: 160px;
+            height: 50px; /* Igual que el marcador */
+            color: #fff;
+            font-size: 0.9em;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #ff0000;
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.5), inset 0 0 10px rgba(255, 255, 255, 0.2);
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.7);
+        }
+
+        .combo-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #FFFF00;
+            font-weight: bold;
+            font-size: 1.5em;
+            text-shadow: 0 0 10px #FF00FF, 0 0 20px #FF00FF;
+            z-index: 100;
+            animation: comboTextAnim 1.5s forwards;
+            pointer-events: none;
+        }
+
+        @keyframes comboTextAnim {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            20% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+            80% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+        }
+
+        /* Barra de progreso de nivel */
+        .level-progress {
+            width: 100%;
+            height: 10px;
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 5px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .level-progress-bar {
+            height: 100%;
+            background: linear-gradient(to right, #00eaff, #8a2be2);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body onload="cargar();" onkeydown="teclaPulsada(event);">
+    <div class="arcade-cabinet">
+        <div class="marquee">
+            <h1>BO-TET-RIS</h1>
+        </div>
+        <div class="coin-slot" onclick="insertCoin()">
+            <div class="coin" id="coin"></div>
+        </div>
+        <div class="coin-text">INSERT COIN</div>
+        <div class="credit-added" id="creditText">CREDIT +1</div>
+        
+        <div class="screen-area">
+            <div class="screen-scanlines"></div>
+            <div class="screen-reflection"></div>
+        
+            <div class="game-container" style="display: flex; justify-content: space-around; width: 100%;">
+                <div class="player-container">
+                    <div class="left-panel">
+                        <div class="controls">
+                            <button class="control-button" onclick="playSound(1)">ENCENDER MUSICA</button>
+                            <button class="control-button" onclick="muteSound(1)">PARAR MUSICA</button>
+                        </div>
+                        <div class="next-piece-container">
+                            <h3>Siguiente Pieza:</h3>
+                            <div id="nextPiecePreview1" class="next-piece-preview"></div>
+                        </div>
+                        <div class="stats-container">
+                            <div class="marcador">
+                                <h3>Puntos:</h3>
+                                <p id="puntos1">0</p>
+                            </div>
+                            <div class="combo-display">
+                                <h3>Combo:</h3>
+                                <p id="combo1">0x</p>
+                            </div>
+                        </div>
+                        <div class="level-display">
+                            <h3>Nivel:</h3>
+                            <p id="nivel1">1</p>
+                            <div class="level-progress">
+                                <div id="progressBar1" class="level-progress-bar"></div>
+                            </div>
+                        </div>
+                        <h4 style="text-align: center;font-size: 2em;">JUGADOR 1</h4>
+                    </div>
+                    <div class="game-board">
+                        <table id="Tabla1"></table>
+                        <audio id="gameSound1" loop>
+                            <source src="./Tetris.mp3" type="audio/mpeg">
+                        </audio>
+                    </div>
+                </div>
+
+                <div class="player-container">
+                    <div class="game-board">
+                        <table id="Tabla2"></table>
+                        <audio id="gameSound2" loop>
+                            <source src="./Tetris.mp3" type="audio/mpeg">
+                        </audio>
+                    </div>
+                    <div class="right-panel">
+                        <div class="controls">
+                            <button class="control-button" onclick="playSound(2)">ENCENDER MUSICA</button>
+                            <button class="control-button" onclick="muteSound(2)">PARAR MUSICA</button>
+                        </div>
+                        <div class="next-piece-container">
+                            <h3>Siguiente Pieza:</h3>
+                            <div id="nextPiecePreview2" class="next-piece-preview"></div>
+                        </div>
+                        <div class="stats-container">
+                            <div class="marcador">
+                                <h3>Puntos:</h3>
+                                <p id="puntos2">0</p>
+                            </div>
+                            <div class="combo-display">
+                                <h3>Combo:</h3>
+                                <p id="combo2">0x</p>
+                            </div>
+                        </div>
+                        <div class="level-display">
+                            <h3>Nivel:</h3>
+                            <p id="nivel2">1</p>
+                            <div class="level-progress">
+                                <div id="progressBar2" class="level-progress-bar"></div>
+                            </div>
+                        </div>
+                        <h4 style="text-align: center;font-size: 2em;">JUGADOR 2</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls-panel">
+            <div class="joystick"></div>
+            <div class="button"></div>
+            <div class="button"></div>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let jugadores = [
+            {
+                coordenadas: null,
+                color: null,
+                centro: null,
+                tableroLibre: [],
+                soundPlaying: false,
+                timeoutID: null,
+                puntos: 0,
+                gameOverFlag: false,
+                nextPiece: null,
+                nivel: 1,
+                lineasCompletadas: 0,
+                lineasParaSiguienteNivel: 5,
+                combo: 0,
+                ultimoComboTime: 0,
+                velocidad: 500 // Velocidad inicial (ms)
+            },
+            {
+                coordenadas: null,
+                color: null,
+                centro: null,
+                tableroLibre: [],
+                soundPlaying: false,
+                timeoutID: null,
+                puntos: 0,
+                gameOverFlag: false,
+                nextPiece: null,
+                nivel: 1,
+                lineasCompletadas: 0,
+                lineasParaSiguienteNivel: 5,
+                combo: 0,
+                ultimoComboTime: 0,
+                velocidad: 500 // Velocidad inicial (ms)
+            }
+        ];
+
+        // Mapeo de colores a clases CSS
+        const colorClases = {
+            "blue": "pieza-j",    // J - Azul
+            "red": "pieza-z",     // Z - Rojo
+            "green": "pieza-s",   // S - Verde
+            "yellow": "pieza-o",  // O - Amarillo
+            "cyan": "pieza-i",    // I - Cian
+            "magenta": "pieza-t", // T - Magenta
+            "orange": "pieza-l"   // L - Naranja
+        };
+
+        // Inicializar tableroLibre para ambos jugadores
+        for (let jugador of jugadores) {
+            for (let fila = 0; fila < 20; fila++) {
+                let filaLibre = [];
+                for (let columna = 0; columna < 10; columna++) {
+                    filaLibre[columna] = true;
+                }
+                jugador.tableroLibre[fila] = filaLibre;
+            }
+        }
+
+        function generarCuadricula(jugadorId) {
+            let contenidoTabla = '';
+            for(let fila = 0; fila < 20; fila++) {
+                contenidoTabla += '<tr>';
+                for(let columna = 0; columna <= 9; columna++) {
+                    contenidoTabla += `<td id="fila${fila}columna${columna}jugador${jugadorId}"></td>`;
+                }
+                contenidoTabla += '</tr>';
+            }
+            document.getElementById(`Tabla${jugadorId}`).innerHTML = contenidoTabla;
+        }
+
+        function gameOver(jugadorId) {
+            clearTimeout(jugadores[jugadorId - 1].timeoutID);
+            jugadores[jugadorId - 1].gameOverFlag = true;
+            alert(`GAME OVER Jugador ${jugadorId}`);
+        }
+
+        function crearPieza(jugadorId) {
+            let jugador = jugadores[jugadorId - 1];
+            if (jugador.gameOverFlag) return;
+
+            if (!jugador.nextPiece) {
+                jugador.nextPiece = generarPiezaAleatoria();
+            }
+
+            let piezaActual = jugador.nextPiece;
+            jugador.nextPiece = generarPiezaAleatoria();
+            mostrarSiguientePieza(jugadorId, jugador.nextPiece);
+
+            jugador.coordenadas = piezaActual.coordenadas;
+            jugador.color = piezaActual.color;
+            jugador.centro = piezaActual.centro;
+
+            if (!estaLibre(jugadorId, jugador.coordenadas)) {
+                gameOver(jugadorId);
+            }
+        }
+
+        function generarPiezaAleatoria() {
+            let numero = Math.floor(Math.random() * 8);
+            let pieza = {};
+            switch (numero) {
+                case 0: // Pieza Z
+                    pieza.coordenadas = [
+                        [0, 3],
+                        [0, 4],
+                        [1, 4],
+                        [1, 5]
+                    ];
+                    pieza.color = "red";
+                    pieza.centro = 1;
+                    break;
+                case 1: // Pieza S
+                    pieza.coordenadas = [
+                        [0, 4],
+                        [0, 5],
+                        [1, 3],
+                        [1, 4]
+                    ];
+                    pieza.color = "green";
+                    pieza.centro = 0;
+                    break;
+                case 2: // Pieza I
+                    pieza.coordenadas = [
+                        [0, 3],
+                        [0, 4],
+                        [0, 5],
+                        [0, 6]
+                    ];
+                    pieza.color = "cyan";
+                    pieza.centro = 1;
+                    break;
+                case 3: // Pieza I vertical
+                    pieza.coordenadas = [
+                        [0, 4],
+                        [1, 4],
+                        [2, 4],
+                        [3, 4]
+                    ];
+                    pieza.color = "cyan";
+                    pieza.centro = 1;
+                    break;
+                case 4: // Pieza O
+                    pieza.coordenadas = [
+                        [0, 4],
+                        [0, 5],
+                        [1, 4],
+                        [1, 5]
+                    ];
+                    pieza.color = "yellow";
+                    pieza.centro = 1;
+                    break;
+                case 5: // Pieza L
+                    pieza.coordenadas = [
+                        [0, 4],
+                        [1, 4],
+                        [2, 4],
+                        [2, 5]
+                    ];
+                    pieza.color = "orange";
+                    pieza.centro = 1;
+                    break;
+                case 6: // Pieza J
+                    pieza.coordenadas = [
+                        [0, 4],
+                        [1, 4],
+                        [1, 3],
+                        [2, 3]
+                    ];
+                    pieza.color = "blue";
+                    pieza.centro = 1;
+                    break;
+                case 7: // Pieza T
+                    pieza.coordenadas = [
+                        [0, 4],
+                        [1, 3],
+                        [1, 4],
+                        [1, 5]
+                    ];
+                    pieza.color = "magenta";
+                    pieza.centro = 2;
+                    break;
+            }
+            return pieza;
+        }
+
+        function mostrarSiguientePieza(jugadorId, pieza) {
+            let previewContainer = document.getElementById(`nextPiecePreview${jugadorId}`);
+            previewContainer.innerHTML = '';
+
+            let minX = Math.min(...pieza.coordenadas.map(coord => coord[1]));
+            let maxX = Math.max(...pieza.coordenadas.map(coord => coord[1]));
+            let minY = Math.min(...pieza.coordenadas.map(coord => coord[0]));
+            let maxY = Math.max(...pieza.coordenadas.map(coord => coord[0]));
+            let piezaWidth = (maxX - minX + 1) * 20;
+            let piezaHeight = (maxY - minY + 1) * 20;
+            let offsetX = (100 - piezaWidth) / 2;
+            let offsetY = (100 - piezaHeight) / 2;
+
+            pieza.coordenadas.forEach(coord => {
+                let block = document.createElement('div');
+                block.className = `block ${colorClases[pieza.color]}`;
+                block.style.left = `${offsetX + (coord[1] - minX) * 24}px`;
+                block.style.top = `${offsetY + (coord[0] - minY) * 24}px`;
+                previewContainer.appendChild(block);
+            });
+        }
+
+        function pintarPieza(jugadorId) {
+            let jugador = jugadores[jugadorId - 1];
+            for (let contador = 0; contador < 4; contador++) {
+                let fila = jugador.coordenadas[contador][0];
+                let columna = jugador.coordenadas[contador][1];
+                let celda = document.getElementById(`fila${fila}columna${columna}jugador${jugadorId}`);
+
+                celda.innerHTML = `<div class="block ${colorClases[jugador.color]}"></div>`;
+            }
+        }
+
+        function borrarPieza(jugadorId) {
+            let jugador = jugadores[jugadorId - 1];
+            for (let contador = 0; contador < 4; contador++) {
+                let fila = jugador.coordenadas[contador][0];
+                let columna = jugador.coordenadas[contador][1];
+                let celda = document.getElementById(`fila${fila}columna${columna}jugador${jugadorId}`);
+                celda.innerHTML = "";
+            }
+        }
+
+        function estaDentro(jugadorId, nuevasCoordenadas) {
+            let contador;
+            for (contador = 0; contador < 4 && nuevasCoordenadas[contador][1] >= 0 && nuevasCoordenadas[contador][1] < 10 && nuevasCoordenadas[contador][0] >= 0 && nuevasCoordenadas[contador][0] < 20; contador++);
+            return contador == 4;
+        }
+
+        function estaLibre(jugadorId, nuevasCoordenadas) {
+            let jugador = jugadores[jugadorId - 1];
+            let contador;
+            for (contador = 0; contador < 4 && jugador.tableroLibre[nuevasCoordenadas[contador][0]][nuevasCoordenadas[contador][1]]; contador++);
+            return contador == 4;
+        }
+
+        function desplazarDerecha(jugadorId) {
+            let jugador = jugadores[jugadorId - 1];
+            let nuevasCoordenadas = [];
+            for (let contador = 0; contador < 4; contador++) {
+                nuevasCoordenadas[contador] = [jugador.coordenadas[contador][0], jugador.coordenadas[contador][1] + 1];
+            }
+            if (estaDentro(jugadorId, nuevasCoordenadas) && estaLibre(jugadorId, nuevasCoordenadas)) {
+                borrarPieza(jugadorId);
+                jugador.coordenadas = nuevasCoordenadas;
+                pintarPieza(jugadorId);
+            }
+        }
+
+        function desplazarIzquierda(jugadorId) {
+            let jugador = jugadores[jugadorId - 1];
+            let nuevasCoordenadas = [];
+            for (let contador = 0; contador < 4; contador++) {
+                nuevasCoordenadas[contador] = [jugador.coordenadas[contador][0], jugador.coordenadas[contador][1] - 1];
+            }
+            if (estaDentro(jugadorId, nuevasCoordenadas) && estaLibre(jugadorId, nuevasCoordenadas)) {
+                borrarPieza(jugadorId);
+                jugador.coordenadas = nuevasCoordenadas;
+                pintarPieza(jugadorId);
+            }
+        }
+
+        function desplazarAbajo(jugadorId) {
+            let jugador = jugadores[jugadorId - 1];
+            clearTimeout(jugador.timeoutID);
+            let nuevasCoordenadas = [];
+            for (let contador = 0; contador < 4; contador++) {
+                nuevasCoordenadas[contador] = [jugador.coordenadas[contador][0] + 1, jugador.coordenadas[contador][1]];
+            }
+            if (estaDentro(jugadorId, nuevasCoordenadas) && estaLibre(jugadorId, nuevasCoordenadas)) {
+                borrarPieza(jugadorId);
+                jugador.coordenadas = nuevasCoordenadas;
+                pintarPieza(jugadorId);
+            } else {
+                fijarPieza(jugadorId);
+                verificarLineasCompletas(jugadorId);
+                crearPieza(jugadorId);
+                pintarPieza(jugadorId);
+            }
+            jugador.timeoutID = setTimeout(() => desplazarAbajo(jugadorId), jugador.velocidad);
+        }
+
+        function fijarPieza(jugadorId) {
+            let jugador = jugadores[jugadorId - 1];
+            for (let contador = 0; contador < 4; contador++) {
+                let fila = jugador.coordenadas[contador][0];
+                let columna = jugador.coordenadas[contador][1];
+                jugador.tableroLibre[fila][columna] = false;
+            }
+        }
+
+        function verificarLineasCompletas(jugadorId) {
+            let jugador = jugadores[jugadorId - 1];
+            let gameBoard = document.getElementById(`Tabla${jugadorId}`).parentElement;
+            let lineasCompletadasEnMovimiento = 0;
+
+            for (let fila = 0; fila < 20; fila++) {
+                let completa = true;
+                for (let columna = 0; columna < 10 && completa; columna++) {
+                    if (jugador.tableroLibre[fila][columna]) {
+                        completa = false;
+                    }
+                }
+
+                if (completa) {
+                    lineasCompletadasEnMovimiento++;
+                    jugador.lineasCompletadas++;
+                    jugador.puntos += 100;
+                    document.getElementById(`puntos${jugadorId}`).innerText = jugador.puntos;
+
+                    // Crear explosion
+                    for (let columna = 0; columna < 10; columna++) {
+                        let celda = document.getElementById(`fila${fila}columna${columna}jugador${jugadorId}`);
+                        let rect = celda.getBoundingClientRect();
+                        let colors = ['#ff0', '#f0f', '#0ff', '#f00', '#0f0']; // Colores
+
+                        for (let i = 0; i < 5; i++) { // 5 particulas por celda
+                            let particle = document.createElement('div');
+                            particle.className = 'particle';
+                            particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                            particle.style.left = `${rect.left + rect.width / 2 - window.scrollX}px`;
+                            particle.style.top = `${rect.top + rect.height / 2 - window.scrollY}px`;
+                            particle.style.setProperty('--x', `${(Math.random() - 0.5) * 100}px`);
+                            particle.style.setProperty('--y', `${(Math.random() - 0.5) * 100}px`);
+                            document.body.appendChild(particle);
+
+                            // Eliminar particula final animacion
+                            setTimeout(() => particle.remove(), 600);
+                        }
+                    }
+
+                    // Limpiar y mover lineas
+                    for (let columna = 0; columna < 10; columna++) {
+                        document.getElementById(`fila${fila}columna${columna}jugador${jugadorId}`).innerHTML = "";
+                        jugador.tableroLibre[fila][columna] = true;
+                    }
+
+                    for (let filaActual = fila; filaActual > 0; filaActual--) {
+                        for (let columna = 0; columna < 10; columna++) {
+                            let celdaActual = document.getElementById(`fila${filaActual}columna${columna}jugador${jugadorId}`);
+                            let celdaSuperior = document.getElementById(`fila${filaActual-1}columna${columna}jugador${jugadorId}`);
+
+                            celdaActual.innerHTML = celdaSuperior.innerHTML;
+                            jugador.tableroLibre[filaActual][columna] = jugador.tableroLibre[filaActual-1][columna];
+
+                            celdaSuperior.innerHTML = "";
+                            jugador.tableroLibre[filaActual-1][columna] = true;
+                        }
+                    }
+                }
+            }
+
+            if (lineasCompletadasEnMovimiento > 0) {
+                actualizarNivel(jugadorId);
+                actualizarCombo(jugadorId, lineasCompletadasEnMovimiento);
+            }
+        }
+
+        function actualizarNivel(jugadorId) {
+            let jugador = jugadores[jugadorId - 1];
+            
+            // Actualizar progreso del nivel
+            let progreso = (jugador.lineasCompletadas % jugador.lineasParaSiguienteNivel) / jugador.lineasParaSiguienteNivel * 100;
+            document.getElementById(`progressBar${jugadorId}`).style.width = `${progreso}%`;
+            
+            // Verificar si subió de nivel
+            if (jugador.lineasCompletadas >= jugador.lineasParaSiguienteNivel * jugador.nivel) {
+                jugador.nivel++;
+                jugador.velocidad = Math.max(100, 500 - (jugador.nivel - 1) * 50); // Aumenta la velocidad cada nivel
+                document.getElementById(`nivel${jugadorId}`).innerText = jugador.nivel;
+                document.getElementById(`nivel${jugadorId}`).parentElement.classList.add('level-up');
+                
+                // Efecto visual de subida de nivel
+                setTimeout(() => {
+                    document.getElementById(`nivel${jugadorId}`).parentElement.classList.remove('level-up');
+                }, 1000);
+                
+                // Aumentar la dificultad para el siguiente nivel
+                jugador.lineasParaSiguienteNivel = Math.floor(jugador.lineasParaSiguienteNivel * 1.2);
+                
+                // Mostrar mensaje de nivel
+                mostrarMensajeNivel(jugadorId, jugador.nivel);
+            }
+        }
+
+        function mostrarMensajeNivel(jugadorId, nivel) {
+            const tablero = document.getElementById(`Tabla${jugadorId}`);
+            const nivelText = document.createElement('div');
+            nivelText.className = 'combo-text';
+            nivelText.textContent = `¡NIVEL ${nivel}!`;
+            tablero.appendChild(nivelText);
+            
+            setTimeout(() => {
+                nivelText.remove();
+            }, 1500);
+        }
+
+        function actualizarCombo(jugadorId, lineasCompletadas) {
+            const jugador = jugadores[jugadorId - 1];
+            const ahora = Date.now();
+            
+            if (lineasCompletadas > 0) {
+                // Si completó líneas y no ha pasado mucho tiempo
+                if (ahora - jugador.ultimoComboTime < 5000) {
+                    jugador.combo++;
+                } else {
+                    jugador.combo = 1;
+                }
+                
+                jugador.ultimoComboTime = ahora;
+                
+                // Bonificación de puntos basada en combo
+                const bonusPoints = Math.floor(lineasCompletadas * 50 * (1 + jugador.combo * 0.2));
+                jugador.puntos += bonusPoints;
+                document.getElementById(`puntos${jugadorId}`).innerText = jugador.puntos;
+                
+                // Actualizar display de combo
+                document.getElementById(`combo${jugadorId}`).innerText = `${jugador.combo}x`;
+                
+                // Mostrar texto combo
+                if (jugador.combo > 1) {
+                    mostrarTextoComboDinamico(jugadorId, jugador.combo, bonusPoints);
+                }
+            } else {
+                // Resetear combo si ha pasado tiempo sin completar líneas
+                if (ahora - jugador.ultimoComboTime > 5000) {
+                    jugador.combo = 0;
+                    document.getElementById(`combo${jugadorId}`).innerText = `0x`;
+                }
+            }
+        }
+
+        function mostrarTextoComboDinamico(jugadorId, combo, puntos) {
+            const tablero = document.getElementById(`Tabla${jugadorId}`);
+            const comboText = document.createElement('div');
+            comboText.className = 'combo-text';
+            comboText.textContent = `¡COMBO x${combo}! +${puntos}`;
+            tablero.appendChild(comboText);
+            
+            setTimeout(() => {
+                comboText.remove();
+            }, 1500);
+        }
+
+        function rotar(jugadorId) {
+            let jugador = jugadores[jugadorId - 1];
+            let nuevasCoordenadas = [];
+            for (let contador = 0; contador < 4; contador++) {
+                nuevasCoordenadas[contador] = [
+                    jugador.coordenadas[jugador.centro][0] + (jugador.coordenadas[contador][1] - jugador.coordenadas[jugador.centro][1]),
+                    jugador.coordenadas[jugador.centro][1] + (jugador.coordenadas[jugador.centro][0] - jugador.coordenadas[contador][0])
+                ];
+            }
+            if (estaDentro(jugadorId, nuevasCoordenadas) && estaLibre(jugadorId, nuevasCoordenadas)) {
+                borrarPieza(jugadorId);
+                jugador.coordenadas = nuevasCoordenadas;
+                pintarPieza(jugadorId);
+            }
+        }
+
+        function teclaPulsada(event) {
+            switch (event.key) {
+                case "d": // J1
+                    desplazarDerecha(1);
+                    break;
+                case "a": // J1
+                    desplazarIzquierda(1);
+                    break;
+                case "s": // J1
+                    desplazarAbajo(1);
+                    break;
+                case "w": // J1
+                    rotar(1);
+                    break;
+                case "ArrowRight": // J2
+                    desplazarDerecha(2);
+                    break;
+                case "ArrowLeft": // J2
+                    desplazarIzquierda(2);
+                    break;
+                case "ArrowDown": // J2
+                    desplazarAbajo(2);
+                    break;
+                case "Control": // J2
+                    rotar(2);
+                    break;
+            }
+        }
+
+        function cargar() {
+            generarCuadricula(1);
+            generarCuadricula(2);
+            crearPieza(1);
+            crearPieza(2);
+            pintarPieza(1);
+            pintarPieza(2);
+            jugadores[0].timeoutID = setTimeout(() => desplazarAbajo(1), jugadores[0].velocidad);
+            jugadores[1].timeoutID = setTimeout(() => desplazarAbajo(2), jugadores[1].velocidad);
+        }
+
+        function playSound(jugadorId) {
+            let sound = document.getElementById(`gameSound${jugadorId}`);
+            sound.play();
+            jugadores[jugadorId - 1].soundPlaying = true;
+        }
+
+        function muteSound(jugadorId) {
+            let sound = document.getElementById(`gameSound${jugadorId}`);
+            sound.pause();
+            jugadores[jugadorId - 1].soundPlaying = false;
+        }
+
+        // Insercion de moneda
+        function insertCoin() {
+            const coinSlot = document.querySelector('.coin-slot');
+            const coin = document.getElementById('coin');
+            const creditText = document.getElementById('creditText');
+            
+            coin.style.display = 'block';
+            coin.style.animation = 'none';
+            creditText.classList.remove('show');
+            
+            coinSlot.classList.add('active');
+            setTimeout(() => {
+                coinSlot.classList.remove('active');
+            }, 500);
+            
+            setTimeout(() => {
+                coin.style.animation = 'coinDrop 0.8s ease-in forwards';
+            }, 100);
+            
+            setTimeout(() => {
+                creditText.classList.add('show');
+            }, 600);
+            
+            const coinSound = new Audio('./coin.mp3');
+            coinSound.volume = 0.3;
+            coinSound.play().catch(e => console.log("Error al reproducir sonido:", e));
+            
+            // Reiniciar moneda para siguiente uso
+            setTimeout(() => {
+                coin.style.display = 'none';
+                coin.style.animation = '';
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
